@@ -50,13 +50,24 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/save/"):]
 	body := r.FormValue("body")
 	page := &Page{Title: title, Body: []byte(body)}
-	page.save()
+	err := page.save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, r, "/view/" + title, http.StatusFound)
 }
 
 func renderTemplate(w http.ResponseWriter, tmplName string, page *Page) {
-	tmpl, _ := template.ParseFiles(tmplName + ".html")
-	tmpl.Execute(w, page)
+	tmpl, err := template.ParseFiles(tmplName + ".html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.Execute(w, page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func main() {
